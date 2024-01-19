@@ -100,6 +100,59 @@ app.get('/api/checkUsername/:username', async (req, res) => {
         res.status(400).json({ message: 'Invalid username format' });
     }
 });
+
+// Endpoint to update user's diet preferences
+app.put('/api/updateDiets', async (req, res) => {
+    const { userId, diets } = req.body;
+
+    try {
+        const result = await pool.query('UPDATE user_settings SET diets = $1 WHERE user_id = $2', [diets, userId]);
+        res.json({ message: 'Diet preferences updated successfully', rowsAffected: result.rowCount });
+    } catch (err) {
+        console.error('Error executing query', err.stack);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// Endpoint to update user's diet preferences
+app.put('/api/updateAssociations', async (req, res) => {
+    const { userId, associations } = req.body;
+
+    try {
+        const result = await pool.query('UPDATE user_settings SET associations = $1 WHERE user_id = $2', [associations, userId]);
+        res.json({ message: 'associations preferences updated successfully', rowsAffected: result.rowCount });
+    } catch (err) {
+        console.error('Error executing query', err.stack);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+app.put('/api/updateWidget', async (req, res) => {
+    const { userId, wigets } = req.body;
+
+    try {
+        const result = await pool.query('UPDATE user_settings SET wigets = $1 WHERE user_id = $2', [wigets, userId]);
+        res.json({ message: 'wigets preferences updated successfully', rowsAffected: result.rowCount });
+    } catch (err) {
+        console.error('Error executing query', err.stack);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+app.get('/api/getUserSettings/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        // Replace the query below with the actual query to fetch user settings
+        const result = await pool.query('SELECT diets, widgets, associations FROM user_settings WHERE user_id = $1', [userId]);
+        if (result.rows.length > 0) {
+            res.json(result.rows[0]);
+        } else {
+            res.status(404).json({ message: 'User settings not found' });
+        }
+    } catch (err) {
+        console.error('Error executing query', err.stack);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
 // Insert data into the table
 app.post('api/addUser', (req, res) => {
     const { username } = req.body;

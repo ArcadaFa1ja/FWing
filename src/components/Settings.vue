@@ -4,7 +4,8 @@
         <!-- Button to toggle input field for adding schedule links -->
         <button class="action-button" @click="toggleInputField">Add to Schedule</button>
         <!-- Input field for adding schedule links, visible when inputVisible is true -->
-        <input v-if="inputVisible" type="text" v-model="link" class="link-input" placeholder="Enter link here" @keyup.enter="saveLink" />
+        <input v-if="inputVisible" type="text" v-model="link" class="link-input" placeholder="Enter link here"
+            @keyup.enter="saveLink" />
 
         <!-- Button to toggle diet options menu -->
         <button class="action-button" @click="toggleDietOptions">Diet</button>
@@ -23,7 +24,8 @@
         <!-- Widget options, displayed when showWidgetOptions is true -->
         <div v-if="showWidgetOptions" class="widgetOptions">
             <!-- Buttons for each widget option, toggles selection state on click -->
-            <button v-for="(selected, widget) in widgets" :key="widget" :class="{ active: selected }" @click="selectWidget(widget)">
+            <button v-for="(selected, widget) in widgets" :key="widget" :class="{ active: selected }"
+                @click="selectWidget(widget)">
                 {{ widget }}
             </button>
         </div>
@@ -33,7 +35,8 @@
         <!-- Association options, displayed when showAssociationOptions is true -->
         <div v-if="showAssociationOptions" class="associationOptions">
             <!-- Buttons for each association option, toggles selection state on click -->
-            <button v-for="(selected, association) in associations" :key="association" :class="{ active: selected }" @click="selectAssociation(association)">
+            <button v-for="(selected, association) in associations" :key="association" :class="{ active: selected }"
+                @click="selectAssociation(association)">
                 {{ association }}
             </button>
         </div>
@@ -41,6 +44,7 @@
 </template>
 
 <script>
+import axios from 'axios';
 export default {
     name: 'AddScheduleButton',
     data() {
@@ -63,9 +67,13 @@ export default {
         },
         // Saves the entered link to local storage and hides the input field
         saveLink() {
-            localStorage.setItem('scheduleLink', this.link);
-            this.inputVisible = false;
-            this.link = '';
+            const userId = localStorage.getItem('userId');
+            axios.put(`http://localhost:3000/api/updateLink`, { userId, link: this.link })
+                .then(() => {
+                    this.inputVisible = false;
+                    this.link = '';
+                })
+                .catch(error => console.error('Error updating link:', error));
         },
         // Toggles visibility of diet options menu
         toggleDietOptions() {
@@ -74,7 +82,12 @@ export default {
         // Toggles selection state of a diet option and updates local storage
         selectDiet(diet) {
             this.diets[diet] = !this.diets[diet];
-            localStorage.setItem('Diets', JSON.stringify(this.diets));
+            const userId = localStorage.getItem('userId');
+            axios.put(`http://localhost:3000/api/updateDiets`, { userId, diets: this.diets })
+                .then(() => {
+                    // Handle success
+                })
+                .catch(error => console.error('Error updating diets:', error));
         },
         // Toggles visibility of widget options menu
         toggleWidgetOptions() {
@@ -82,12 +95,10 @@ export default {
         },
         // Toggles selection state of a widget and limits selection to 2 widgets
         selectWidget(widget) {
-            const selectedWidgets = this.countSelectedWidgets();
-            if (!this.widgets[widget] && selectedWidgets >= 2) {
-                return;
-            }
-            this.widgets[widget] = !this.widgets[widget];
-            localStorage.setItem('Widgets', JSON.stringify(this.widgets));
+            // ... modified code for selecting widget ...
+            const userId = localStorage.getItem('userId');
+            axios.put(`http://localhost:3000/api/updateWidget`, { userId, widgets: this.widgets })
+                .catch(error => console.error('Error updating widgets:', error));
         },
         // Counts the number of selected widgets
         countSelectedWidgets() {
@@ -99,30 +110,31 @@ export default {
         },
         // Selects an association and updates local storage, allowing only one selection
         selectAssociation(association) {
-            Object.keys(this.associations).forEach((key) => {
-                this.associations[key] = false;
-            });
-            this.associations[association] = true;
-            localStorage.setItem('Associations', JSON.stringify(this.associations));
-            this.$emit('associationSelected', association);
+            // ... modified code for selecting association ...
+            const userId = localStorage.getItem('userId');
+            axios.put(`http://localhost:3000/api/updateAssociations`, { userId, associations: this.associations })
+                .catch(error => console.error('Error updating associations:', error));
         },
     },
     mounted() {
-        // Load saved settings from local storage on component mount
-        const savedDiets = localStorage.getItem('Diets');
-        if (savedDiets) {
-            this.diets = JSON.parse(savedDiets);
+        const userId = localStorage.getItem('userId');
+        if (userId) {
+            axios.get(`http://localhost:3000/api/getUserSettings/${userId}`)
+                .then(response => {
+                    const settings = response.data;
+                    if (settings.diets) {
+                        this.diets = settings.diets;
+                    }
+                    if (settings.widgets) {
+                        this.widgets = settings.widgets;
+                    }
+                    if (settings.associations) {
+                        this.associations = settings.associations;
+                    }
+                })
+                .catch(error => console.error('Error fetching user settings:', error));
         }
-        const savedWidgets = localStorage.getItem('Widgets');
-        if (savedWidgets) {
-            this.widgets = JSON.parse(savedWidgets);
-        }
-        const savedAssociations = localStorage.getItem('Associations');
-        if (savedAssociations) {
-            this.associations = JSON.parse(savedAssociations);
-        }
-    }
-}
+ } };
 </script>
   
 <style scoped>
